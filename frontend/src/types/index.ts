@@ -84,6 +84,70 @@ export interface Ticket {
   aiConfidence: number;
   createdAt: string;
   updatedAt: string;
+  isSwarming?: boolean;
+}
+
+export interface NextBestAction {
+  id: string;
+  title: string;
+  actionType: 'REFUND' | 'RETENTION' | 'UPGRADE' | 'ESCALATE' | 'WAIVE_FEE';
+  propensityScore: number; // 0-100%
+  rationale: string;
+  businessValue: string;
+  concessionValue?: string;
+  permittedAction: string;
+}
+
+export interface SwarmParticipant {
+  id: number;
+  name: string;
+  role: string;
+  department: string;
+  isOnline: boolean;
+  avatar: string;
+}
+
+export interface VoiceCallSession {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  durationSeconds: number;
+  status: 'RINGING' | 'CONNECTED' | 'ON_HOLD' | 'ENDED';
+  isRecording: boolean;
+  sentiment: 'POSITIVE' | 'NEUTRAL' | 'FRUSTRATED';
+  transcription: { speaker: string; text: string; time: string }[];
+  summary?: string;
+  disposition?: string;
+}
+
+export interface SystemComponentStatus {
+  id: string;
+  name: string;
+  status: 'OPERATIONAL' | 'DEGRADED' | 'OUTAGE';
+  uptimePercentage: number;
+  description: string;
+}
+
+export interface AgentCapacity {
+  id: number;
+  name: string;
+  role: string;
+  department: string;
+  activeTickets: number;
+  maxCapacity: number;
+  languages: string[];
+  skills: string[];
+  status: 'ONLINE' | 'BUSY' | 'ON_CALL' | 'OFFLINE';
+}
+
+export interface IntegrationConnector {
+  id: string;
+  name: string;
+  category: 'CRM' | 'COMMERCE' | 'DEV' | 'COMMS' | 'PAYMENTS';
+  description: string;
+  isConnected: boolean;
+  webhookCount: number;
+  lastSyncAt: string;
 }
 
 export interface AiInsight {
@@ -96,6 +160,7 @@ export interface AiInsight {
   suggestedReply: string;
   policyReferences: string[];
   nextBestActions: string[];
+  nextBestDecision?: NextBestAction;
   requiresHumanApproval: boolean;
 }
 

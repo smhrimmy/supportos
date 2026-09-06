@@ -15,7 +15,11 @@ import {
   BarChart3,
   ShieldAlert,
   Sliders,
-  ChevronDown
+  ChevronDown,
+  Activity,
+  Plug,
+  ExternalLink,
+  Users
 } from 'lucide-react';
 import { Channel } from '../../types';
 
@@ -46,11 +50,11 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-64 border-r border-slate-800 bg-slate-900/60 flex flex-col h-[calc(100vh-3.5rem)] select-none">
       {/* Navigation Sections */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-5">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         
         {/* Workspace Inboxes */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1.5 flex items-center justify-between">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1 flex items-center justify-between">
             <span>Support Queues</span>
             <span className="text-slate-500 font-mono text-[9px]">LIVE</span>
           </div>
@@ -125,10 +129,10 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Omnichannel Filter */}
+        {/* Omnichannel Streams */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1.5">
-            Omnichannel Streams
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1">
+            Omnichannel Channels
           </div>
           <div className="space-y-0.5">
             <button
@@ -171,26 +175,38 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
             </button>
 
             <button
-              onClick={() => { onViewChange('workspace'); onChannelChange('VOICE'); }}
+              onClick={() => onViewChange('voice')}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                selectedChannel === 'VOICE' ? 'bg-blue-600/20 text-blue-400 font-semibold' : 'text-slate-300 hover:bg-slate-800/50'
+                activeView === 'voice' ? 'bg-violet-600/20 text-violet-300 font-semibold border border-violet-500/30' : 'text-slate-300 hover:bg-slate-800/50'
               }`}
             >
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-violet-400" />
-                <span>Voice Contact</span>
+                <span>Voice Softphone</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">{ticketCounts.voice}</span>
+              <span className="text-[10px] font-mono bg-violet-500/20 text-violet-300 px-1.5 py-0.2 rounded font-semibold">LIVE</span>
             </button>
           </div>
         </div>
 
-        {/* SupportOS Studio Modules */}
+        {/* Enterprise Platform Engines */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1.5">
-            SupportOS Platform
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1">
+            Enterprise Engines
           </div>
           <div className="space-y-0.5">
+            <button
+              onClick={() => onViewChange('portal')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'portal'
+                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+              <span>Customer Portal</span>
+            </button>
+
             <button
               onClick={() => onViewChange('agent-studio')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -207,12 +223,24 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
               onClick={() => onViewChange('automation')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeView === 'automation'
-                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                  ? 'bg-cyan-600/20 text-cyan-300 border border-cyan-500/30'
                   : 'text-slate-300 hover:bg-slate-800/50'
               }`}
             >
               <Workflow className="w-3.5 h-3.5 text-cyan-400" />
               <span>Visual Automations</span>
+            </button>
+
+            <button
+              onClick={() => onViewChange('wfm')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'wfm'
+                  ? 'bg-amber-600/20 text-amber-300 border border-amber-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Workforce (WFM)</span>
             </button>
 
             <button
@@ -225,6 +253,30 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
             >
               <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
               <span>Knowledge Base & RAG</span>
+            </button>
+
+            <button
+              onClick={() => onViewChange('status')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'status'
+                  ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Operational Status</span>
+            </button>
+
+            <button
+              onClick={() => onViewChange('integrations')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'integrations'
+                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <Plug className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Integrations & Webhooks</span>
             </button>
 
             <button
@@ -242,7 +294,7 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Incident Detection Quick Banner */}
+      {/* Incident Detector Banner */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/40">
         <div className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500/10 to-rose-500/10 border border-amber-500/20">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-bold mb-1">
@@ -255,10 +307,10 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
           <div className="mt-2 flex items-center justify-between">
             <span className="text-[10px] text-slate-400">97% AI Confidence</span>
             <button 
-              onClick={() => onViewChange('analytics')}
+              onClick={() => onViewChange('status')}
               className="text-[10px] font-semibold text-amber-400 hover:underline"
             >
-              View Incident →
+              View Status →
             </button>
           </div>
         </div>

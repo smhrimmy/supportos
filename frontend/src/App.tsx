@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
+import { CommandPalette } from './components/layout/CommandPalette';
 import { CommandCenterSidebar } from './components/workspace/CommandCenterSidebar';
 import { TicketInboxList } from './components/workspace/TicketInboxList';
 import { LiveSupportFlow } from './components/workspace/LiveSupportFlow';
@@ -9,11 +10,19 @@ import { AgentStudioView } from './components/views/AgentStudioView';
 import { AutomationBuilderView } from './components/views/AutomationBuilderView';
 import { KnowledgeBaseView } from './components/views/KnowledgeBaseView';
 import { AnalyticsView } from './components/views/AnalyticsView';
+import { VoiceContactCenter } from './components/voice/VoiceContactCenter';
+import { CustomerPortalView } from './components/portal/CustomerPortalView';
+import { StatusPageView } from './components/status/StatusPageView';
+import { WorkforceView } from './components/wfm/WorkforceView';
+import { IntegrationsHubView } from './components/integrations/IntegrationsHubView';
 import { Ticket, Message, Customer, CustomerOrder, AiInsight, TicketStatus } from './types';
 import { api } from './services/api';
 
 export function App() {
-  const [activeView, setActiveView] = useState<'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics'>('workspace');
+  const [activeView, setActiveView] = useState<
+    'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics' | 'voice' | 'portal' | 'status' | 'wfm' | 'integrations'
+  >('workspace');
+
   const [currentTenant, setCurrentTenant] = useState('acme');
   const [selectedChannel, setSelectedChannel] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -27,6 +36,7 @@ export function App() {
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [copilot, setCopilot] = useState<AiInsight | null>(null);
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Load tickets on mount or filter change
   useEffect(() => {
@@ -115,8 +125,20 @@ export function App() {
 
   const handleApplyAction = async (actionName: string) => {
     if (!selectedTicket) return;
-    // Post an internal note explaining the action execution
     await handleSendMessage(`⚡ [AI Action Executed]: ${actionName}. Telemetry audit record created.`, true);
+  };
+
+  const handleCommandPaletteAction = (actionKey: string, payload?: any) => {
+    if (actionKey === 'OPEN_PALETTE') {
+      setIsCommandPaletteOpen(true);
+      return;
+    }
+    if (actionKey === 'SELECT_TICKET' && payload) {
+      setActiveView('workspace');
+      selectTicket(payload);
+      return;
+    }
+    setActiveView(actionKey as any);
   };
 
   // Ticket counts for sidebar
@@ -132,7 +154,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Top Global Command Bar */}
       <Header
         currentTenant={currentTenant}
@@ -142,18 +164,21 @@ export function App() {
         onSearchChange={setSearchQuery}
         activeView={activeView}
         onViewChange={(v: any) => setActiveView(v)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Workspace Body */}
       <main className="flex-1 flex overflow-hidden">
-        {/* Left Column: Command Center Sidebar */}
-        <CommandCenterSidebar
-          activeView={activeView}
-          onViewChange={(v: any) => setActiveView(v)}
-          selectedChannel={selectedChannel}
-          onChannelChange={setSelectedChannel}
-          ticketCounts={ticketCounts}
-        />
+        {/* Left Column: Command Center Sidebar (Shown on all views except full Customer Portal) */}
+        {activeView !== 'portal' && (
+          <CommandCenterSidebar
+            activeView={activeView}
+            onViewChange={(v: any) => setActiveView(v)}
+            selectedChannel={selectedChannel}
+            onChannelChange={setSelectedChannel}
+            ticketCounts={ticketCounts}
+          />
+        )}
 
         {/* Dynamic View Switcher */}
         {activeView === 'workspace' && (
@@ -169,7 +194,7 @@ export function App() {
               onPriorityFilterChange={setPriorityFilter}
             />
 
-            {/* Center-Right: Live Omnichannel Support Flow & Composer */}
+            {/* Center-Right: Live Support Flow, Case Swarming & Composer */}
             <LiveSupportFlow
               ticket={selectedTicket}
               messages={messages}
@@ -180,7 +205,7 @@ export function App() {
               onRewriteTone={api.rewriteTone}
             />
 
-            {/* Right Column: Customer Intelligence 360 & Copilot Sidecar */}
+            {/* Right Column: Customer Intelligence 360 & Pega NBA Sidecar */}
             <CustomerIntelligencePanel
               ticket={selectedTicket}
               customer={customer}
@@ -192,6 +217,16 @@ export function App() {
           </div>
         )}
 
+        {activeView === 'voice' && <VoiceContactCenter />}
+        {activeView === 'portal' && (
+          <CustomerPortalView
+            orders={orders}
+            onBackToAgentWorkspace={() => setActiveView('workspace')}
+          />
+        )}
+        {activeView === 'status' && <StatusPageView />}
+        {activeView === 'wfm' && <WorkforceView />}
+        {activeView === 'integrations' && <IntegrationsHubView />}
         {activeView === 'agent-studio' && <AgentStudioView />}
         {activeView === 'automation' && <AutomationBuilderView />}
         {activeView === 'knowledge' && <KnowledgeBaseView />}
@@ -203,6 +238,14 @@ export function App() {
         isOpen={isNewTicketModalOpen}
         onClose={() => setIsNewTicketModalOpen(false)}
         onSubmit={handleCreateTicket}
+      />
+
+      {/* Global Spotlight Command Palette (Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectAction={handleCommandPaletteAction}
+        tickets={tickets}
       />
     </div>
   );

@@ -5,7 +5,8 @@ import {
   SenderType, 
   Channel, 
   TicketStatus, 
-  TicketPriority 
+  TicketPriority,
+  SwarmParticipant 
 } from '../../types';
 import { 
   Send, 
@@ -22,7 +23,11 @@ import {
   MessageSquare, 
   Phone, 
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Users,
+  GitPullRequest,
+  ExternalLink,
+  Plus
 } from 'lucide-react';
 
 interface LiveSupportFlowProps {
@@ -44,10 +49,17 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
   suggestedReply,
   onRewriteTone
 }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'CONVERSATION' | 'CASE_SWARM'>('CONVERSATION');
   const [inputText, setInputText] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [selectedTone, setSelectedTone] = useState('PROFESSIONAL');
   const [isRewriting, setIsRewriting] = useState(false);
+
+  const swarmParticipants: SwarmParticipant[] = [
+    { id: 1, name: 'Marcus Vance', role: 'Billing Specialist', department: 'Finance', isOnline: true, avatar: 'MV' },
+    { id: 2, name: 'Alex Rivera', role: 'Lead DevOps Engineer', department: 'Engineering', isOnline: true, avatar: 'AR' },
+    { id: 3, name: 'Elena Rostova', role: 'Escalation Director', department: 'Operations', isOnline: true, avatar: 'ER' }
+  ];
 
   if (!ticket) {
     return (
@@ -145,6 +157,27 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
 
         {/* Action controls */}
         <div className="flex items-center gap-2">
+          {/* Sub Tab Switcher: Conversation vs Case Swarm */}
+          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setActiveSubTab('CONVERSATION')}
+              className={`px-2.5 py-1 rounded font-semibold transition-all ${
+                activeSubTab === 'CONVERSATION' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Stream
+            </button>
+            <button
+              onClick={() => setActiveSubTab('CASE_SWARM')}
+              className={`px-2.5 py-1 rounded font-semibold flex items-center gap-1 transition-all ${
+                activeSubTab === 'CASE_SWARM' ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Users className="w-3 h-3 text-indigo-400" />
+              <span>Case Swarm (3)</span>
+            </button>
+          </div>
+
           {/* Status Dropdown */}
           <select
             value={ticket.status}
@@ -169,64 +202,127 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
         </div>
       </div>
 
-      {/* Message Thread Stream */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-        {messages.map((msg) => {
-          const isCustomer = msg.senderType === 'CUSTOMER';
-          const isNote = msg.isInternalNote;
-          const isAi = msg.senderType === 'AI_BOT';
+      {/* SWARM ROOM VIEW (Salesforce-style Case Swarming) */}
+      {activeSubTab === 'CASE_SWARM' ? (
+        <div className="flex-1 p-6 space-y-5 overflow-y-auto bg-slate-950/60">
+          <div className="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs">
+                <Users className="w-4 h-4 text-indigo-400" />
+                <span>Salesforce-Style Active Case Swarm</span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                Cross-functional resolution swarm linked to <strong className="text-white">#swarm-tck-1042-billing</strong> on Slack.
+              </p>
+            </div>
+            <button 
+              onClick={() => alert("Specialist invited to Swarm!")}
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Invite Swarmer</span>
+            </button>
+          </div>
 
-          if (isNote) {
-            return (
-              <div 
-                key={msg.id} 
-                className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-200 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-1 text-[11px] font-bold text-amber-400">
-                  <div className="flex items-center gap-1.5">
-                    <Lock className="w-3 h-3" />
-                    <span>INTERNAL NOTE — {msg.senderName}</span>
+          {/* Active Swarmers */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Active Swarm Participants
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {swarmParticipants.map((sp) => (
+                <div key={sp.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-white font-bold text-xs flex items-center justify-center">
+                    {sp.avatar}
                   </div>
-                  <span className="text-[10px] text-amber-500/80 font-mono">
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>{sp.name}</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-400">{sp.role} • {sp.department}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Linked Engineering Issues */}
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Linked Engineering Artifacts
+            </h4>
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-slate-200">
+                <GitPullRequest className="w-4 h-4 text-purple-400" />
+                <span>GitHub Issue #882: Fix idempotency token expiration on checkout</span>
+              </div>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded">
+                Merged to Staging
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Message Thread Stream */
+        <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+          {messages.map((msg) => {
+            const isCustomer = msg.senderType === 'CUSTOMER';
+            const isNote = msg.isInternalNote;
+            const isAi = msg.senderType === 'AI_BOT';
+
+            if (isNote) {
+              return (
+                <div 
+                  key={msg.id} 
+                  className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-1 text-[11px] font-bold text-amber-400">
+                    <div className="flex items-center gap-1.5">
+                      <Lock className="w-3 h-3" />
+                      <span>INTERNAL NOTE — {msg.senderName}</span>
+                    </div>
+                    <span className="text-[10px] text-amber-500/80 font-mono">
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className="text-amber-100 whitespace-pre-wrap leading-relaxed">
+                    {msg.content}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
+              >
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1 px-1">
+                  <span className="font-semibold text-slate-300">{msg.senderName}</span>
+                  <span>•</span>
+                  <span className="font-mono">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
+                  {msg.channel && <span className="text-slate-500">via {msg.channel}</span>}
                 </div>
-                <div className="text-amber-100 whitespace-pre-wrap leading-relaxed">
+
+                <div
+                  className={`max-w-xl rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-wrap ${
+                    isCustomer
+                      ? 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tl-sm'
+                      : isAi
+                      ? 'bg-purple-900/30 border border-purple-500/30 text-purple-100 rounded-tr-sm'
+                      : 'bg-blue-600 text-white rounded-tr-sm'
+                  }`}
+                >
                   {msg.content}
                 </div>
               </div>
             );
-          }
-
-          return (
-            <div
-              key={msg.id}
-              className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
-            >
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1 px-1">
-                <span className="font-semibold text-slate-300">{msg.senderName}</span>
-                <span>•</span>
-                <span className="font-mono">
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                {msg.channel && <span className="text-slate-500">via {msg.channel}</span>}
-              </div>
-
-              <div
-                className={`max-w-xl rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-wrap ${
-                  isCustomer
-                    ? 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tl-sm'
-                    : isAi
-                    ? 'bg-purple-900/30 border border-purple-500/30 text-purple-100 rounded-tr-sm'
-                    : 'bg-blue-600 text-white rounded-tr-sm'
-                }`}
-              >
-                {msg.content}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+          })}
+        </div>
+      )}
 
       {/* Composer Section */}
       <div className="p-3 border-t border-slate-800 bg-slate-900/60 backdrop-blur space-y-2">

@@ -23,7 +23,9 @@ import {
   Building,
   Mail,
   Phone,
-  Check
+  Check,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 
 interface CustomerIntelligenceProps {
@@ -45,6 +47,7 @@ export const CustomerIntelligencePanel: React.FC<CustomerIntelligenceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'COPILOT' | 'CUSTOMER_360' | 'QA_INCIDENT'>('COPILOT');
   const [actionDone, setActionDone] = useState<string | null>(null);
+  const [nbaExecuted, setNbaExecuted] = useState(false);
 
   if (!ticket) {
     return (
@@ -62,6 +65,12 @@ export const CustomerIntelligencePanel: React.FC<CustomerIntelligenceProps> = ({
     setTimeout(() => setActionDone(null), 3000);
   };
 
+  const handleExecuteNba = () => {
+    setNbaExecuted(true);
+    onApplyAction("Pega NBA: Executed Immediate $350 Reversal + Waived Next Month Enterprise Platform Fee ($350 Concession)");
+    setTimeout(() => setNbaExecuted(false), 4000);
+  };
+
   return (
     <aside className="w-96 border-l border-slate-800 bg-slate-900/60 flex flex-col h-[calc(100vh-3.5rem)] select-none">
       {/* Tab Navigation */}
@@ -75,7 +84,7 @@ export const CustomerIntelligencePanel: React.FC<CustomerIntelligenceProps> = ({
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-          <span>AI Copilot</span>
+          <span>AI Copilot & NBA</span>
         </button>
 
         <button
@@ -106,9 +115,43 @@ export const CustomerIntelligencePanel: React.FC<CustomerIntelligenceProps> = ({
       {/* Tab Content Body */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
-        {/* TAB 1: AI COPILOT */}
+        {/* TAB 1: AI COPILOT & PEGA NEXT BEST ACTION */}
         {activeTab === 'COPILOT' && copilot && (
           <div className="space-y-4">
+            
+            {/* PEGA CUSTOMER DECISION HUB — NEXT BEST ACTION (NBA) */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-slate-900 border border-indigo-500/40 shadow-lg space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-bold text-indigo-300">
+                <span className="flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-indigo-400" />
+                  <span>Pega Next-Best-Action (NBA) Hub</span>
+                </span>
+                <span className="text-[10px] font-mono bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 px-2 py-0.5 rounded font-bold">
+                  94% Propensity
+                </span>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Strategic Action: Instant $350 Reversal + 1-Mo Platform Credit
+                </h4>
+                <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  Formula: <strong className="text-indigo-300">High LTV ($8,400)</strong> × <strong className="text-rose-300">Churn Sensitivity (Frustrated)</strong> = Full fee credit concession protects $12k annual enterprise renewal.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 border-t border-indigo-500/20">
+                <span className="font-semibold text-emerald-400">+$1,200 LTV Retention Value</span>
+                <button
+                  onClick={handleExecuteNba}
+                  disabled={nbaExecuted}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded-md text-[10px] shadow-sm transition-all"
+                >
+                  {nbaExecuted ? '✓ Executed & Logged' : 'Execute NBA →'}
+                </button>
+              </div>
+            </div>
+
             {/* Live Telemetry Card */}
             <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/30 shadow-sm space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-purple-300">
