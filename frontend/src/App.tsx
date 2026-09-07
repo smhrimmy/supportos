@@ -15,12 +15,14 @@ import { CustomerPortalView } from './components/portal/CustomerPortalView';
 import { StatusPageView } from './components/status/StatusPageView';
 import { WorkforceView } from './components/wfm/WorkforceView';
 import { IntegrationsHubView } from './components/integrations/IntegrationsHubView';
+import { GuidedProductFixer } from './components/pega/GuidedProductFixer';
+import { InteractionRecordView } from './components/pega/InteractionRecordView';
 import { Ticket, Message, Customer, CustomerOrder, AiInsight, TicketStatus } from './types';
 import { api } from './services/api';
 
 export function App() {
   const [activeView, setActiveView] = useState<
-    'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics' | 'voice' | 'portal' | 'status' | 'wfm' | 'integrations'
+    'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics' | 'voice' | 'portal' | 'status' | 'wfm' | 'integrations' | 'diagnostics' | 'interactions'
   >('workspace');
 
   const [currentTenant, setCurrentTenant] = useState('acme');
@@ -227,6 +229,64 @@ export function App() {
         {activeView === 'status' && <StatusPageView />}
         {activeView === 'wfm' && <WorkforceView />}
         {activeView === 'integrations' && <IntegrationsHubView />}
+        {activeView === 'diagnostics' && (
+          <div className="flex-1 p-8 overflow-y-auto bg-slate-950">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    Pega Guided Product Diagnostics & Fixing Studio
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Case Lifecycle Management (CLM) for hardware, software, and edge device troubleshooting.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveView('workspace')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                >
+                  ← Back to Workspace
+                </button>
+              </div>
+              <GuidedProductFixer
+                isOpen={true}
+                onClose={() => setActiveView('workspace')}
+                ticketId={selectedTicket ? selectedTicket.id : 1042}
+                ticketTitle={selectedTicket ? selectedTicket.title : 'Intermittent Edge Router Telemetry Failure'}
+                onSessionComplete={(session) => {
+                  handleSendMessage(`[Pega Guided Diagnostic Fixer Completed]: Hardware RMA #${session.rmaDetails?.rmaNumber} dispatched with ${session.rmaDetails?.courier}. Firmware hotfix scheduled.`, true);
+                  setActiveView('workspace');
+                }}
+              />
+            </div>
+          </div>
+        )}
+        {activeView === 'interactions' && (
+          <div className="flex-1 p-8 overflow-y-auto bg-slate-950">
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    Pega Interaction Records & Contact Notes Hub
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Complete audio/chat recording playback, synchronized transcripts, supervisor coaching whispers, and compliance audit trail.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveView('workspace')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                >
+                  ← Back to Workspace
+                </button>
+              </div>
+              <InteractionRecordView
+                ticketId={selectedTicket ? selectedTicket.id : 1042}
+                customerName={selectedTicket?.customerName || 'Sarah Chen'}
+              />
+            </div>
+          </div>
+        )}
         {activeView === 'agent-studio' && <AgentStudioView />}
         {activeView === 'automation' && <AutomationBuilderView />}
         {activeView === 'knowledge' && <KnowledgeBaseView />}

@@ -232,6 +232,30 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
             </button>
 
             <button
+              onClick={() => onViewChange('diagnostics')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'diagnostics'
+                  ? 'bg-amber-600/20 text-amber-300 border border-amber-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-amber-400" />
+              <span>Pega Product Fixer</span>
+            </button>
+
+            <button
+              onClick={() => onViewChange('interactions')}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                activeView === 'interactions'
+                  ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
+                  : 'text-slate-300 hover:bg-slate-800/50'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+              <span>Interaction Records</span>
+            </button>
+
+            <button
               onClick={() => onViewChange('wfm')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 activeView === 'wfm'

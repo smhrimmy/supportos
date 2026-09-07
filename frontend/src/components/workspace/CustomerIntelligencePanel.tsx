@@ -119,36 +119,61 @@ export const CustomerIntelligencePanel: React.FC<CustomerIntelligenceProps> = ({
         {activeTab === 'COPILOT' && copilot && (
           <div className="space-y-4">
             
-            {/* PEGA CUSTOMER DECISION HUB — NEXT BEST ACTION (NBA) */}
-            <div className="p-3.5 rounded-xl bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-slate-900 border border-indigo-500/40 shadow-lg space-y-2.5">
+            {/* PEGA CUSTOMER DECISION HUB — NEXT BEST ACTION (NBA) ARBITRATION */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-indigo-950/70 via-purple-950/50 to-slate-900 border border-indigo-500/40 shadow-lg space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-indigo-300">
                 <span className="flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-indigo-400" />
-                  <span>Pega Next-Best-Action (NBA) Hub</span>
+                  <span>Pega CDH Next-Best-Action Arbitration</span>
                 </span>
                 <span className="text-[10px] font-mono bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 px-2 py-0.5 rounded font-bold">
-                  94% Propensity
+                  Ranked Offers
                 </span>
               </div>
 
-              <div>
+              {/* Offer 1 (Primary - 94% Propensity) */}
+              <div className="p-2.5 rounded-lg bg-slate-900/80 border border-indigo-500/30 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">#1 Primary NBA (94% Propensity)</span>
+                  <span className="text-[10px] font-bold text-emerald-400">+$1,200 LTV Protection</span>
+                </div>
                 <h4 className="text-xs font-bold text-white leading-snug">
-                  Strategic Action: Instant $350 Reversal + 1-Mo Platform Credit
+                  Instant $350 Reversal + 1-Mo Loyalty Platform Credit
                 </h4>
-                <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                  Formula: <strong className="text-indigo-300">High LTV ($8,400)</strong> × <strong className="text-rose-300">Churn Sensitivity (Frustrated)</strong> = Full fee credit concession protects $12k annual enterprise renewal.
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Formula: <strong className="text-indigo-300">LTV ($8,400)</strong> × <strong className="text-rose-300">Frustration (-0.75)</strong> = Concession eliminates churn risk on $12k renewal.
+                </p>
+                <div className="pt-1 flex justify-end">
+                  <button
+                    onClick={handleExecuteNba}
+                    disabled={nbaExecuted}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded text-[10px] shadow-sm transition-all"
+                  >
+                    {nbaExecuted ? '✓ Executed & Logged' : 'Execute Offer 1 →'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Offer 2 (Alternative - 88% Propensity) */}
+              <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-800 space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-semibold text-amber-300">#2 Proactive Hardware Diagnostic & RMA (88%)</span>
+                  <span className="text-slate-400 font-mono">Cost: $0</span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Telemetry detected cooling fan seizure on SN-9021-4821A. Pre-dispatch replacement before catastrophic outage.
                 </p>
               </div>
 
-              <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 border-t border-indigo-500/20">
-                <span className="font-semibold text-emerald-400">+$1,200 LTV Retention Value</span>
-                <button
-                  onClick={handleExecuteNba}
-                  disabled={nbaExecuted}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded-md text-[10px] shadow-sm transition-all"
-                >
-                  {nbaExecuted ? '✓ Executed & Logged' : 'Execute NBA →'}
-                </button>
+              {/* Offer 3 (Alternative - 76% Propensity) */}
+              <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-800 space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-semibold text-sky-300">#3 Elevate Security to VIP Managed Key (76%)</span>
+                  <span className="text-slate-400 font-mono">Security</span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Issue dedicated hardware security key (FIDO2) and priority routing tag for Sarah Chen.
+                </p>
               </div>
             </div>
 

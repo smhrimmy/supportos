@@ -51,6 +51,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const quickNav = [
     { label: 'Unified Support Workspace', key: 'workspace', icon: <MessageSquare className="w-4 h-4 text-blue-400" /> },
+    { label: 'Pega Guided Product Diagnostics & Fixing', key: 'diagnostics', icon: <Activity className="w-4 h-4 text-amber-400" /> },
+    { label: 'Pega Interaction Records & Contact Notes', key: 'interactions', icon: <BookOpen className="w-4 h-4 text-purple-400" /> },
     { label: 'Voice Contact Center (Softphone)', key: 'voice', icon: <Phone className="w-4 h-4 text-violet-400" /> },
     { label: 'Customer Self-Service Portal', key: 'portal', icon: <ExternalLink className="w-4 h-4 text-emerald-400" /> },
     { label: 'AI Agent Studio & Marketplace', key: 'agent-studio', icon: <Cpu className="w-4 h-4 text-purple-400" /> },

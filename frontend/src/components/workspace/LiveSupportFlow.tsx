@@ -6,7 +6,10 @@ import {
   Channel, 
   TicketStatus, 
   TicketPriority,
-  SwarmParticipant 
+  SwarmParticipant,
+  CustomerVerification,
+  ProductDiagnosticSession,
+  AutoWrapUpSummary
 } from '../../types';
 import { 
   Send, 
@@ -23,12 +26,20 @@ import {
   MessageSquare, 
   Phone, 
   ShieldCheck,
+  ShieldAlert,
   AlertCircle,
   Users,
   GitPullRequest,
   ExternalLink,
-  Plus
+  Plus,
+  Wrench,
+  FileCheck,
+  CheckCircle2
 } from 'lucide-react';
+import { CustomerVerificationModal } from '../pega/CustomerVerificationModal';
+import { GuidedProductFixer } from '../pega/GuidedProductFixer';
+import { AutoWrapUpModal } from '../pega/AutoWrapUpModal';
+import { InteractionRecordView } from '../pega/InteractionRecordView';
 
 interface LiveSupportFlowProps {
   ticket: Ticket | null;
@@ -49,17 +60,38 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
   suggestedReply,
   onRewriteTone
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'CONVERSATION' | 'CASE_SWARM'>('CONVERSATION');
+  const [activeSubTab, setActiveSubTab] = useState<'CONVERSATION' | 'CASE_SWARM' | 'INTERACTION_AUDIT'>('CONVERSATION');
   const [inputText, setInputText] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
+  const [isCoachingWhisper, setIsCoachingWhisper] = useState(false);
   const [selectedTone, setSelectedTone] = useState('PROFESSIONAL');
   const [isRewriting, setIsRewriting] = useState(false);
+
+  // Pega Enterprise Modal States
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
+  const [showWrapUpModal, setShowWrapUpModal] = useState(false);
+
+  // Customer Verification State
+  const [verification, setVerification] = useState<CustomerVerification>({
+    status: 'PARTIALLY_VERIFIED',
+    authRefId: 'AUTH-REF-8841-VIP',
+    assuranceScore: 65,
+    kbaQuestions: [
+      { id: 'kba-1', question: 'Billing ZIP Code', maskedAnswer: '94*** (San Francisco)', isVerified: true },
+      { id: 'kba-2', question: 'Last 4 Digits of Active Card', maskedAnswer: '****-4242', isVerified: true },
+      { id: 'kba-3', question: 'Date of Account Registration', maskedAnswer: 'March 2024', isVerified: false },
+    ],
+    otpSent: false,
+    allowedActions: ['VIEW_PUBLIC_ORDERS'],
+  });
 
   const swarmParticipants: SwarmParticipant[] = [
     { id: 1, name: 'Marcus Vance', role: 'Billing Specialist', department: 'Finance', isOnline: true, avatar: 'MV' },
     { id: 2, name: 'Alex Rivera', role: 'Lead DevOps Engineer', department: 'Engineering', isOnline: true, avatar: 'AR' },
     { id: 3, name: 'Elena Rostova', role: 'Escalation Director', department: 'Operations', isOnline: true, avatar: 'ER' }
   ];
+
 
   if (!ticket) {
     return (
@@ -157,7 +189,26 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
 
         {/* Action controls */}
         <div className="flex items-center gap-2">
-          {/* Sub Tab Switcher: Conversation vs Case Swarm */}
+          {/* Pega Enterprise Actions */}
+          <button
+            onClick={() => setShowDiagnosticModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-colors"
+            title="Pega Guided Product Diagnostic Wizard"
+          >
+            <Wrench className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Product Diagnostics</span>
+          </button>
+
+          <button
+            onClick={() => setShowWrapUpModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold transition-colors"
+            title="Pega GenAI Auto-Wrap-Up and Case Resolution"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">Wrap Up & Resolve</span>
+          </button>
+
+          {/* Sub Tab Switcher: Conversation vs Case Swarm vs Audit Notes */}
           <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-xs">
             <button
               onClick={() => setActiveSubTab('CONVERSATION')}
@@ -174,7 +225,16 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               }`}
             >
               <Users className="w-3 h-3 text-indigo-400" />
-              <span>Case Swarm (3)</span>
+              <span>Swarm</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('INTERACTION_AUDIT')}
+              className={`px-2.5 py-1 rounded font-semibold flex items-center gap-1 transition-all ${
+                activeSubTab === 'INTERACTION_AUDIT' ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FileCheck className="w-3 h-3 text-emerald-400" />
+              <span>Audit & Notes</span>
             </button>
           </div>
 
@@ -199,6 +259,43 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               {ticket.assignedAgentName || 'Unassigned'}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Pega Customer Verification Banner */}
+      <div className={`px-4 py-2 text-xs flex items-center justify-between border-b ${
+        verification.status === 'FULLY_AUTHENTICATED'
+          ? 'bg-emerald-950/30 border-emerald-500/20 text-emerald-300'
+          : verification.status === 'PARTIALLY_VERIFIED'
+          ? 'bg-sky-950/30 border-sky-500/20 text-sky-300'
+          : 'bg-amber-950/30 border-amber-500/20 text-amber-300'
+      }`}>
+        <div className="flex items-center gap-2">
+          {verification.status === 'FULLY_AUTHENTICATED' ? (
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          ) : (
+            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+          )}
+          <span>
+            Identity Status:{' '}
+            <strong className="font-semibold">{verification.status.replace('_', ' ')}</strong> ({verification.assuranceScore}%)
+            {' • '}
+            <span className="font-mono text-slate-400">RefID: {verification.authRefId}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {verification.status === 'FULLY_AUTHENTICATED' ? (
+            <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" /> ISO-27001 Cleared
+            </span>
+          ) : (
+            <button
+              onClick={() => setShowVerifyModal(true)}
+              className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] transition-colors shadow-sm"
+            >
+              Verify Customer Identity
+            </button>
+          )}
         </div>
       </div>
 
@@ -262,6 +359,11 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               </span>
             </div>
           </div>
+        </div>
+      ) : activeSubTab === 'INTERACTION_AUDIT' ? (
+        /* Pega Interaction Record & Contact Notes Audit View */
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-950/60">
+          <InteractionRecordView ticketId={ticket.id} customerName={ticket.customerName || 'Customer'} />
         </div>
       ) : (
         /* Message Thread Stream */
@@ -375,13 +477,21 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
 
         {/* Textarea */}
         <div className={`relative rounded-xl border transition-all ${
-          isInternalNote 
+          isCoachingWhisper
+            ? 'bg-amber-950/30 border-amber-400 focus-within:border-amber-400'
+            : isInternalNote 
             ? 'bg-amber-950/20 border-amber-500/40 focus-within:border-amber-500' 
             : 'bg-slate-950/90 border-slate-800 focus-within:border-blue-500/70'
         }`}>
           <textarea
             rows={3}
-            placeholder={isInternalNote ? "Write an internal team note (only agents and AI can see this)..." : "Reply to customer (Ctrl+Enter to send)..."}
+            placeholder={
+              isCoachingWhisper
+                ? "💡 Write a supervisor coaching whisper (only visible to agent Elena)..."
+                : isInternalNote 
+                ? "Write an internal team note (only agents and AI can see this)..." 
+                : "Reply to customer (Ctrl+Enter to send)..."
+            }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -394,7 +504,10 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               {/* Note Toggle */}
               <button
                 type="button"
-                onClick={() => setIsInternalNote(!isInternalNote)}
+                onClick={() => {
+                  setIsInternalNote(!isInternalNote);
+                  if (isCoachingWhisper) setIsCoachingWhisper(false);
+                }}
                 className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded transition-all ${
                   isInternalNote 
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
@@ -403,6 +516,22 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               >
                 <Lock className="w-3 h-3" />
                 <span>Internal Note</span>
+              </button>
+
+              {/* Coaching Whisper Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCoachingWhisper(!isCoachingWhisper);
+                  if (!isCoachingWhisper) setIsInternalNote(true);
+                }}
+                className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded transition-all ${
+                  isCoachingWhisper 
+                    ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' 
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                <span>💡 Supervisor Whisper</span>
               </button>
 
               <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
@@ -426,6 +555,38 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Pega Enterprise Modals */}
+      <CustomerVerificationModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        customerName={ticket.customerName || 'Sarah Chen'}
+        customerEmail={ticket.customerEmail || 'sarah.chen@acmeglobal.com'}
+        verification={verification}
+        onVerificationUpdate={(updated) => setVerification(updated)}
+      />
+
+      <GuidedProductFixer
+        isOpen={showDiagnosticModal}
+        onClose={() => setShowDiagnosticModal(false)}
+        ticketId={ticket.id}
+        ticketTitle={ticket.title}
+        onSessionComplete={(session) => {
+          onSendMessage(`[Pega Guided Diagnostic Fixer Completed]: Hardware RMA #${session.rmaDetails?.rmaNumber} dispatched with ${session.rmaDetails?.courier}. Firmware hotfix scheduled.`, true);
+        }}
+      />
+
+      <AutoWrapUpModal
+        isOpen={showWrapUpModal}
+        onClose={() => setShowWrapUpModal(false)}
+        ticketId={ticket.id}
+        ticketTitle={ticket.title}
+        customerName={ticket.customerName || 'Sarah Chen'}
+        onWrapUpComplete={(summary) => {
+          onUpdateStatus('RESOLVED');
+          onSendMessage(`[Pega GenAI Auto-Wrap-Up Applied]:\n• Disposition: ${summary.dispositionCode}\n• Resolution: ${summary.resolutionSummary}\n• Sentiment Trajectory Shift: +${summary.sentimentShiftPercent}% (CSAT: ${summary.estimatedCsat}/5)`, true);
+        }}
+      />
     </div>
   );
 };

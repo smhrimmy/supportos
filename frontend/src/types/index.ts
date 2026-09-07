@@ -183,3 +183,129 @@ export interface KnowledgeArticle {
   tags?: string;
   createdAt: string;
 }
+
+// ==========================================
+// PEGA CUSTOMER SERVICE & CDH DOMAIN MODELS
+// ==========================================
+
+export type VerificationStatus = 'UNVERIFIED' | 'PARTIALLY_VERIFIED' | 'FULLY_AUTHENTICATED';
+
+export interface KbaQuestion {
+  id: string;
+  question: string;
+  maskedAnswer: string;
+  isVerified: boolean;
+}
+
+export interface CustomerVerification {
+  status: VerificationStatus;
+  authRefId: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  kbaQuestions: KbaQuestion[];
+  otpSent: boolean;
+  otpCode?: string;
+  assuranceScore: number;
+  allowedActions: string[];
+}
+
+export type DiagnosticStage = 'IDENTIFICATION' | 'DIAGNOSTICS' | 'RESOLUTION' | 'VERIFICATION';
+
+export interface DiagnosticCheck {
+  id: string;
+  name: string;
+  description: string;
+  status: 'PENDING' | 'RUNNING' | 'PASS' | 'FAIL';
+  telemetrySignal?: string;
+  remedyAction?: string;
+}
+
+export interface ProductDiagnosticSession {
+  id: string;
+  ticketId: number;
+  productName: string;
+  productSku: string;
+  serialNumber: string;
+  firmwareVersion: string;
+  symptoms: string[];
+  currentStage: DiagnosticStage;
+  checks: DiagnosticCheck[];
+  resolutionType?: 'FIRMWARE_PATCH' | 'CONFIG_RESET' | 'HARDWARE_RMA' | 'TECHNICIAN_DISPATCH';
+  rmaDetails?: {
+    rmaNumber: string;
+    returnTrackingNumber: string;
+    replacementUnitSku: string;
+    labelDownloadUrl: string;
+    warrantyStatus: 'ACTIVE' | 'EXPIRED' | 'EXTENDED';
+    courier: string;
+  };
+}
+
+export type PegaDispositionCode = 
+  | 'BILLING_RESOLVED' 
+  | 'PRODUCT_RMA_ISSUED' 
+  | 'TECH_CONFIG_APPLIED' 
+  | 'CHURN_PREVENTED' 
+  | 'ACCOUNT_VERIFIED' 
+  | 'ESCALATED_TIER_3';
+
+export interface SentimentTrajectoryPoint {
+  stage: 'OPENING' | 'DISCOVERY' | 'RESOLUTION' | 'WRAP_UP';
+  score: number; // -1.0 to 1.0
+  label: string;
+  color: string;
+}
+
+export interface AutoWrapUpSummary {
+  ticketId: number;
+  reasonForContact: string;
+  diagnosticStepsTaken: string[];
+  resolutionSummary: string;
+  dispositionCode: PegaDispositionCode;
+  sentimentTrajectory: SentimentTrajectoryPoint[];
+  sentimentShiftPercent: number;
+  followUpActionItems: { id: string; text: string; completed: boolean; dueDate?: string }[];
+  estimatedCsat: number; // 1-5
+  autoWrapConfidence: number; // 0-100%
+  completedAt?: string;
+}
+
+export type ContactNoteType = 'GENERAL' | 'INTERNAL_CONFIDENTIAL' | 'COACHING_WHISPER' | 'COMPLIANCE_FLAG';
+
+export interface ContactNote {
+  id: string;
+  ticketId: number;
+  authorName: string;
+  authorRole: string;
+  noteType: ContactNoteType;
+  content: string;
+  timestamp: string;
+  isAudited: boolean;
+}
+
+export interface InteractionTranscriptLine {
+  id: string;
+  timestamp: string;
+  speaker: 'CUSTOMER' | 'AGENT' | 'AI_BOT' | 'SUPERVISOR';
+  text: string;
+  sentiment?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+}
+
+export interface InteractionRecord {
+  id: string;
+  interactionRef: string; // e.g., INT-2026-8841
+  ticketId: number;
+  customerName: string;
+  channel: Channel;
+  startedAt: string;
+  endedAt: string;
+  durationFormatted: string;
+  recordingUrl?: string;
+  audioWaveform?: number[];
+  transcript: InteractionTranscriptLine[];
+  authRefId: string;
+  wrapUpCode: PegaDispositionCode;
+  notes: ContactNote[];
+  complianceVerified: boolean;
+}
+
