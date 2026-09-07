@@ -17,12 +17,13 @@ import { WorkforceView } from './components/wfm/WorkforceView';
 import { IntegrationsHubView } from './components/integrations/IntegrationsHubView';
 import { GuidedProductFixer } from './components/pega/GuidedProductFixer';
 import { InteractionRecordView } from './components/pega/InteractionRecordView';
+import { AdminControlCenterView } from './components/admin/AdminControlCenterView';
 import { Ticket, Message, Customer, CustomerOrder, AiInsight, TicketStatus } from './types';
 import { api } from './services/api';
 
 export function App() {
   const [activeView, setActiveView] = useState<
-    'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics' | 'voice' | 'portal' | 'status' | 'wfm' | 'integrations' | 'diagnostics' | 'interactions'
+    'workspace' | 'agent-studio' | 'automation' | 'knowledge' | 'analytics' | 'voice' | 'portal' | 'status' | 'wfm' | 'integrations' | 'diagnostics' | 'interactions' | 'admin'
   >('workspace');
 
   const [currentTenant, setCurrentTenant] = useState('acme');
@@ -291,6 +292,7 @@ export function App() {
         {activeView === 'automation' && <AutomationBuilderView />}
         {activeView === 'knowledge' && <KnowledgeBaseView />}
         {activeView === 'analytics' && <AnalyticsView />}
+        {activeView === 'admin' && <AdminControlCenterView />}
       </main>
 
       {/* New Ticket Creation Modal */}

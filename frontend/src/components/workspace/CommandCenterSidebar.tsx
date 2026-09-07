@@ -19,7 +19,8 @@ import {
   Activity,
   Plug,
   ExternalLink,
-  Users
+  Users,
+  Settings
 } from 'lucide-react';
 import { Channel } from '../../types';
 
@@ -195,6 +196,21 @@ export const CommandCenterSidebar: React.FC<SidebarProps> = ({
             Enterprise Engines
           </div>
           <div className="space-y-0.5">
+            <button
+              onClick={() => onViewChange('admin')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeView === 'admin'
+                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40'
+                  : 'text-indigo-300 hover:bg-slate-800/60'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Admin & Genesys</span>
+              </div>
+              <span className="text-[9px] font-mono bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded font-bold">CONTROL</span>
+            </button>
+
             <button
               onClick={() => onViewChange('portal')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${

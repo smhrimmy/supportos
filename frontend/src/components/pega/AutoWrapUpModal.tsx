@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -9,9 +9,12 @@ import {
   Send, 
   FileText,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Pause,
+  Play
 } from 'lucide-react';
-import { AutoWrapUpSummary, PegaDispositionCode, SentimentTrajectoryPoint } from '../../types';
+import { AutoWrapUpSummary, PegaDispositionCode, SentimentTrajectoryPoint, CustomerTier } from '../../types';
+import { useAdminStore } from '../../services/useAdminStore';
 
 interface AutoWrapUpModalProps {
   isOpen: boolean;
@@ -19,6 +22,7 @@ interface AutoWrapUpModalProps {
   ticketId: number;
   ticketTitle: string;
   customerName: string;
+  customerTier?: CustomerTier;
   onWrapUpComplete: (summary: AutoWrapUpSummary) => void;
 }
 
@@ -55,8 +59,12 @@ export const AutoWrapUpModal: React.FC<AutoWrapUpModalProps> = ({
   ticketId,
   ticketTitle,
   customerName,
+  customerTier = 'ENTERPRISE',
   onWrapUpComplete,
 }) => {
+  const { getDispositionsForTier, telephony } = useAdminStore();
+  const activeDispositions = getDispositionsForTier(customerTier);
+
   const [summary, setSummary] = useState<AutoWrapUpSummary>({
     ...DEFAULT_SUMMARY,
     ticketId,
@@ -64,16 +72,19 @@ export const AutoWrapUpModal: React.FC<AutoWrapUpModalProps> = ({
   const [selectedDisposition, setSelectedDisposition] = useState<PegaDispositionCode>(summary.dispositionCode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
+  // Genesys After-Call Work (ACW) countdown timer
+  const [acwSecondsLeft, setAcwSecondsLeft] = useState(telephony.acwDurationSeconds || 45);
+  const [isAcwPaused, setIsAcwPaused] = useState(false);
 
-  const dispositionOptions: { code: PegaDispositionCode; label: string; desc: string }[] = [
-    { code: 'BILLING_RESOLVED', label: 'Billing Resolved', desc: 'Duplicate charges, credits or refunds handled' },
-    { code: 'PRODUCT_RMA_ISSUED', label: 'Product RMA Issued', desc: 'Defective hardware replaced under warranty' },
-    { code: 'TECH_CONFIG_APPLIED', label: 'Tech Config Applied', desc: 'Software patch or router setting resolved issue' },
-    { code: 'CHURN_PREVENTED', label: 'Churn Prevented', desc: 'Pega NBA retention incentive accepted' },
-    { code: 'ACCOUNT_VERIFIED', label: 'Account Verified', desc: 'Identity elevated and security cleared' },
-    { code: 'ESCALATED_TIER_3', label: 'Escalated to Tier 3', desc: 'Routed to engineering or senior swarming' },
-  ];
+  useEffect(() => {
+    if (!isOpen || isAcwPaused || acwSecondsLeft <= 0) return;
+    const timer = setInterval(() => {
+      setAcwSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, isAcwPaused, acwSecondsLeft]);
+
+  if (!isOpen) return null;
 
   const handleActionToggle = (id: string) => {
     setSummary((prev) => ({
@@ -124,6 +135,36 @@ export const AutoWrapUpModal: React.FC<AutoWrapUpModalProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Genesys ACW Timer Banner */}
+        <div className="px-6 py-2 bg-indigo-950/40 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-slate-300">
+              Genesys After-Call Work (ACW) Timer:
+            </span>
+            <span className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
+              acwSecondsLeft < 15 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-indigo-500/20 text-indigo-300'
+            }`}>
+              {acwSecondsLeft}s remaining
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAcwPaused(!isAcwPaused)}
+              className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 flex items-center gap-1"
+            >
+              {isAcwPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+              {isAcwPaused ? 'Resume' : 'Pause'}
+            </button>
+            <button
+              onClick={() => setAcwSecondsLeft((prev) => prev + 30)}
+              className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300"
+            >
+              +30s
+            </button>
+          </div>
         </div>
 
         {/* Body Content */}
@@ -195,16 +236,21 @@ export const AutoWrapUpModal: React.FC<AutoWrapUpModalProps> = ({
             </div>
           </div>
 
-          {/* Disposition Code Selector */}
+          {/* Disposition Code Selector (Dynamically Filtered by Customer Tier via Admin Store) */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-indigo-400" /> Pega Disposition & Wrap-Up Code:
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-indigo-400" /> Pega Disposition & Wrap-Up Code:
+              </label>
+              <span className="text-[10px] font-mono text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 font-bold">
+                Customer Tier: {customerTier}
+              </span>
+            </div>
             <div className="grid grid-cols-3 gap-2">
-              {dispositionOptions.map((opt) => (
+              {activeDispositions.map((opt) => (
                 <button
                   key={opt.code}
-                  onClick={() => setSelectedDisposition(opt.code)}
+                  onClick={() => setSelectedDisposition(opt.code as PegaDispositionCode)}
                   className={`p-3 rounded-xl text-left border transition-all ${
                     selectedDisposition === opt.code
                       ? 'bg-indigo-500/10 border-indigo-500 text-white shadow-sm'
@@ -212,7 +258,7 @@ export const AutoWrapUpModal: React.FC<AutoWrapUpModalProps> = ({
                   }`}
                 >
                   <p className="text-xs font-semibold text-slate-200">{opt.label}</p>
-                  <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">{opt.desc}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">{opt.description}</p>
                 </button>
               ))}
             </div>

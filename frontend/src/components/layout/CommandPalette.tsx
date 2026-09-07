@@ -13,7 +13,8 @@ import {
   Plug, 
   ExternalLink,
   Layers,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import { Ticket } from '../../types';
 
@@ -50,6 +51,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   if (!isOpen) return null;
 
   const quickNav = [
+    { label: 'Enterprise Admin & Genesys Control Deck', key: 'admin', icon: <Settings className="w-4 h-4 text-indigo-400" /> },
     { label: 'Unified Support Workspace', key: 'workspace', icon: <MessageSquare className="w-4 h-4 text-blue-400" /> },
     { label: 'Pega Guided Product Diagnostics & Fixing', key: 'diagnostics', icon: <Activity className="w-4 h-4 text-amber-400" /> },
     { label: 'Pega Interaction Records & Contact Notes', key: 'interactions', icon: <BookOpen className="w-4 h-4 text-purple-400" /> },

@@ -309,3 +309,59 @@ export interface InteractionRecord {
   complianceVerified: boolean;
 }
 
+// ==========================================
+// ADMIN CONTROL CENTER & GENESYS ACD MODELS
+// ==========================================
+
+export interface AdminDispositionCategory {
+  id: string;
+  code: string;
+  label: string;
+  description: string;
+  allowedCustomerTiers: CustomerTier[];
+  requiresMandatoryNote: boolean;
+  triggerFollowUpTicket: boolean;
+  isActive: boolean;
+  badgeColor: string;
+}
+
+export interface CustomerTierPolicy {
+  tier: CustomerTier;
+  minAssuranceRequired: VerificationStatus;
+  maxAutonomousRefund: number; // e.g., 1000 for Enterprise, 250 for Pro
+  slaTargetMinutes: number; // 15m for VIP, 60m for Pro, 240m for Standard
+  rmaFastTrack: boolean;
+  dedicatedAgentRequired: boolean;
+  allowPriorityQueueBypass: boolean;
+}
+
+export interface GenesysQueueConfig {
+  id: string;
+  name: string;
+  channel: Channel;
+  skillRequirements: string[];
+  basePriority: number;
+  ltvMultiplier: number;
+  maxWaitSeconds: number;
+  overflowQueueName?: string;
+  activeAgentsCount: number;
+}
+
+export interface TelephonyPolicy {
+  dualChannelRecording: boolean;
+  pciComplianceMute: boolean;
+  sttModel: string;
+  ivrGreetingPrompt: string;
+  acwDurationSeconds: number; // After-Call Work countdown (e.g. 45s)
+  autoWrapEnabled: boolean;
+}
+
+export interface AiGuardrailConfig {
+  containmentRateTarget: number; // 0-100%
+  modelTemperature: number; // 0.0-1.0
+  concessionCapDollar: number;
+  requireHumanAboveDollar: number;
+  sentimentAlertThreshold: number; // e.g. -0.6
+}
+
+

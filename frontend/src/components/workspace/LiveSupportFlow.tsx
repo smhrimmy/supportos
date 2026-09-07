@@ -582,6 +582,7 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
         ticketId={ticket.id}
         ticketTitle={ticket.title}
         customerName={ticket.customerName || 'Sarah Chen'}
+        customerTier={ticket.tags?.toLowerCase().includes('vip') || ticket.priority === 'CRITICAL' ? 'ENTERPRISE' : 'STANDARD'}
         onWrapUpComplete={(summary) => {
           onUpdateStatus('RESOLVED');
           onSendMessage(`[Pega GenAI Auto-Wrap-Up Applied]:\n• Disposition: ${summary.dispositionCode}\n• Resolution: ${summary.resolutionSummary}\n• Sentiment Trajectory Shift: +${summary.sentimentShiftPercent}% (CSAT: ${summary.estimatedCsat}/5)`, true);

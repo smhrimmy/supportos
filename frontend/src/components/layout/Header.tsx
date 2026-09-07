@@ -10,7 +10,8 @@ import {
   Activity,
   UserCheck,
   Phone,
-  ExternalLink
+  ExternalLink,
+  Settings
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -96,6 +97,19 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Phone className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Softphone</span>
+        </button>
+
+        {/* Admin & Genesys Control Deck */}
+        <button
+          onClick={() => onViewChange('admin')}
+          className={`hidden lg:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+            activeView === 'admin'
+              ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20'
+              : 'bg-slate-900 border-slate-700/80 text-indigo-300 hover:bg-slate-800'
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5 text-indigo-400" />
+          <span>Admin & Genesys</span>
         </button>
 
         {/* Customer Portal Launcher */}
