@@ -17,9 +17,6 @@ import {
   Sparkles, 
   Clock, 
   UserCheck, 
-  ChevronDown, 
-  Smile, 
-  Paperclip, 
   Wand2, 
   Radio, 
   Mail, 
@@ -27,14 +24,15 @@ import {
   Phone, 
   ShieldCheck,
   ShieldAlert,
-  AlertCircle,
   Users,
   GitPullRequest,
-  ExternalLink,
   Plus,
   Wrench,
   FileCheck,
-  CheckCircle2
+  CheckCircle2,
+  Check,
+  ChevronRight,
+  Lightbulb
 } from 'lucide-react';
 import { CustomerVerificationModal } from '../pega/CustomerVerificationModal';
 import { GuidedProductFixer } from '../pega/GuidedProductFixer';
@@ -92,16 +90,15 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
     { id: 3, name: 'Elena Rostova', role: 'Escalation Director', department: 'Operations', isOnline: true, avatar: 'ER' }
   ];
 
-
   if (!ticket) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 p-8 text-center text-slate-500">
-        <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
-          <MessageSquare className="w-6 h-6 text-slate-600" />
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#FAF9FD] p-8 text-center text-slate-400">
+        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-3 shadow-sm">
+          <MessageSquare className="w-7 h-7 text-purple-600" />
         </div>
-        <h3 className="text-sm font-semibold text-slate-300 mb-1">No Ticket Selected</h3>
+        <h3 className="text-sm font-bold text-slate-800 mb-1">No Case Selected</h3>
         <p className="text-xs text-slate-500 max-w-sm">
-          Select a ticket from the triage queue on the left to start live resolution and copilot actions.
+          Select a case from the triage queue on the left to initiate Pega guided service and AI-assisted resolution.
         </p>
       </div>
     );
@@ -109,7 +106,7 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-    onSendMessage(inputText.trim(), isInternalNote);
+    onSendMessage(inputText.trim(), isInternalNote || isCoachingWhisper);
     setInputText('');
   };
 
@@ -128,21 +125,12 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
 
   const handleToneChange = async (tone: string) => {
     setSelectedTone(tone);
-    if (!inputText.trim()) {
-      if (suggestedReply) {
-        setIsRewriting(true);
-        try {
-          const res = await onRewriteTone(suggestedReply, tone);
-          setInputText(res);
-        } finally {
-          setIsRewriting(false);
-        }
-      }
-      return;
-    }
+    const sourceText = inputText.trim() || suggestedReply;
+    if (!sourceText) return;
+
     setIsRewriting(true);
     try {
-      const res = await onRewriteTone(inputText, tone);
+      const res = await onRewriteTone(sourceText, tone);
       setInputText(res);
     } finally {
       setIsRewriting(false);
@@ -156,142 +144,171 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
   const getChannelBadge = (ch: Channel) => {
     switch (ch) {
       case 'WHATSAPP':
-        return <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full"><Radio className="w-3 h-3" /> WhatsApp Live</span>;
+        return <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full"><Radio className="w-3 h-3 text-emerald-600" /> WhatsApp</span>;
       case 'LIVE_CHAT':
-        return <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full"><MessageSquare className="w-3 h-3" /> Live Chat</span>;
+        return <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full"><MessageSquare className="w-3 h-3 text-sky-600" /> Live Chat</span>;
       case 'EMAIL':
-        return <span className="flex items-center gap-1 text-[11px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full"><Mail className="w-3 h-3" /> Email Inbound</span>;
+        return <span className="flex items-center gap-1 text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"><Mail className="w-3 h-3 text-purple-600" /> Email</span>;
       case 'VOICE':
-        return <span className="flex items-center gap-1 text-[11px] font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full"><Phone className="w-3 h-3" /> Voice Session</span>;
+        return <span className="flex items-center gap-1 text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"><Phone className="w-3 h-3 text-purple-600" /> Voice</span>;
       default:
-        return <span className="text-[11px] font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded-full">{ch}</span>;
+        return <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">{ch}</span>;
     }
   };
 
+  // Pega Chevron Stage Definition
+  const pegaStages = [
+    { key: 'VERIFY', label: '1. Identity Check', isDone: verification.status === 'FULLY_AUTHENTICATED', isActive: verification.status !== 'FULLY_AUTHENTICATED' },
+    { key: 'DIAGNOSE', label: '2. Diagnostic Probe', isDone: false, isActive: verification.status === 'FULLY_AUTHENTICATED' && ticket.status !== 'RESOLVED' },
+    { key: 'RESOLVE', label: '3. Resolution & RMA', isDone: ticket.status === 'RESOLVED', isActive: false },
+    { key: 'WRAP', label: '4. Case Wrap-Up', isDone: ticket.status === 'RESOLVED', isActive: false },
+  ];
+
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] bg-slate-950 border-r border-slate-800">
-      {/* Ticket Header & Controls */}
-      <div className="p-3.5 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex items-center justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
-              #{ticket.ticketNumber}
-            </span>
-            {getChannelBadge(ticket.channel)}
-            <span className="text-xs font-semibold text-slate-400">
-              • {ticket.category}
-            </span>
-          </div>
-          <h2 className="text-sm font-bold text-white truncate">
-            {ticket.title}
-          </h2>
+    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] bg-[#FAF9FD] border-r border-slate-200/90">
+      
+      {/* Pega Chevron Stage Path Bar */}
+      <div className="px-5 py-2.5 bg-white border-b border-slate-200/80 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center gap-1 overflow-x-auto text-xs font-semibold">
+          {pegaStages.map((st, idx) => (
+            <React.Fragment key={st.key}>
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                st.isDone 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold'
+                  : st.isActive 
+                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/20 font-bold'
+                  : 'bg-slate-50 text-slate-400 border border-slate-100'
+              }`}>
+                {st.isDone && <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />}
+                <span>{st.label}</span>
+              </div>
+              {idx < pegaStages.length - 1 && (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* Action controls */}
+        {/* Action Controls in Stage Bar */}
         <div className="flex items-center gap-2">
-          {/* Pega Enterprise Actions */}
           <button
             onClick={() => setShowDiagnosticModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition-all shadow-2xs"
             title="Pega Guided Product Diagnostic Wizard"
           >
-            <Wrench className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Product Diagnostics</span>
+            <Wrench className="w-3.5 h-3.5 text-purple-600" />
+            <span className="hidden sm:inline">Diagnostic Wizard</span>
           </button>
 
           <button
             onClick={() => setShowWrapUpModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm shadow-purple-600/20 transition-all active:scale-95"
             title="Pega GenAI Auto-Wrap-Up and Case Resolution"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">Wrap Up & Resolve</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Wrap Up Case</span>
           </button>
+        </div>
+      </div>
 
-          {/* Sub Tab Switcher: Conversation vs Case Swarm vs Audit Notes */}
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-xs">
+      {/* Case Header & Sub-Tab Bar */}
+      <div className="px-5 py-3 border-b border-slate-200/80 bg-white flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+              #{ticket.ticketNumber}
+            </span>
+            {getChannelBadge(ticket.channel)}
+            <span className="text-xs font-semibold text-slate-500">
+              • {ticket.category}
+            </span>
+          </div>
+          <h2 className="text-sm font-bold text-slate-900 truncate">
+            {ticket.title}
+          </h2>
+        </div>
+
+        {/* Sub-Tab Navigation */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-semibold">
             <button
               onClick={() => setActiveSubTab('CONVERSATION')}
-              className={`px-2.5 py-1 rounded font-semibold transition-all ${
-                activeSubTab === 'CONVERSATION' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 rounded-lg transition-all ${
+                activeSubTab === 'CONVERSATION' 
+                  ? 'bg-white text-purple-700 shadow-sm font-bold' 
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Stream
+              Conversation
             </button>
             <button
               onClick={() => setActiveSubTab('CASE_SWARM')}
-              className={`px-2.5 py-1 rounded font-semibold flex items-center gap-1 transition-all ${
-                activeSubTab === 'CASE_SWARM' ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
+                activeSubTab === 'CASE_SWARM' 
+                  ? 'bg-white text-purple-700 shadow-sm font-bold' 
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Users className="w-3 h-3 text-indigo-400" />
+              <Users className="w-3.5 h-3.5 text-purple-600" />
               <span>Swarm</span>
             </button>
             <button
               onClick={() => setActiveSubTab('INTERACTION_AUDIT')}
-              className={`px-2.5 py-1 rounded font-semibold flex items-center gap-1 transition-all ${
-                activeSubTab === 'INTERACTION_AUDIT' ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
+                activeSubTab === 'INTERACTION_AUDIT' 
+                  ? 'bg-white text-purple-700 shadow-sm font-bold' 
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <FileCheck className="w-3 h-3 text-emerald-400" />
+              <FileCheck className="w-3.5 h-3.5 text-purple-600" />
               <span>Audit & Notes</span>
             </button>
           </div>
 
-          {/* Status Dropdown */}
+          {/* Ticket Status Select */}
           <select
             value={ticket.status}
             onChange={(e) => onUpdateStatus(e.target.value as TicketStatus)}
-            className="bg-slate-900 border border-slate-700 text-xs text-slate-200 font-semibold px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-blue-500"
+            className="bg-slate-50 border border-slate-200 text-xs text-slate-700 font-bold px-2.5 py-1.5 rounded-xl focus:outline-none focus:border-purple-500"
           >
             <option value="NEW">New</option>
             <option value="ASSIGNED">Assigned</option>
             <option value="IN_PROGRESS">In Progress</option>
-            <option value="WAITING_ON_CUSTOMER">Waiting on Customer</option>
+            <option value="WAITING_ON_CUSTOMER">Waiting</option>
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
-
-          {/* Assigned Agent */}
-          <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg text-slate-200">
-            <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-medium text-slate-300">
-              {ticket.assignedAgentName || 'Unassigned'}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* Pega Customer Verification Banner */}
-      <div className={`px-4 py-2 text-xs flex items-center justify-between border-b ${
+      {/* Customer Verification Status Strip */}
+      <div className={`px-5 py-2 text-xs flex items-center justify-between border-b ${
         verification.status === 'FULLY_AUTHENTICATED'
-          ? 'bg-emerald-950/30 border-emerald-500/20 text-emerald-300'
-          : verification.status === 'PARTIALLY_VERIFIED'
-          ? 'bg-sky-950/30 border-sky-500/20 text-sky-300'
-          : 'bg-amber-950/30 border-amber-500/20 text-amber-300'
+          ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-800'
+          : 'bg-amber-50/70 border-amber-200/80 text-amber-900'
       }`}>
         <div className="flex items-center gap-2">
           {verification.status === 'FULLY_AUTHENTICATED' ? (
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           ) : (
-            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
           )}
           <span>
-            Identity Status:{' '}
-            <strong className="font-semibold">{verification.status.replace('_', ' ')}</strong> ({verification.assuranceScore}%)
+            Identity Status: <strong className="font-bold">{verification.status.replace('_', ' ')}</strong> ({verification.assuranceScore}%)
             {' • '}
-            <span className="font-mono text-slate-400">RefID: {verification.authRefId}</span>
+            <span className="font-mono text-slate-600">RefID: {verification.authRefId}</span>
           </span>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div>
           {verification.status === 'FULLY_AUTHENTICATED' ? (
-            <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> ISO-27001 Cleared
+            <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> ISO-27001 Cleared
             </span>
           ) : (
             <button
               onClick={() => setShowVerifyModal(true)}
-              className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] transition-colors shadow-sm"
+              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] shadow-2xs transition-all"
             >
               Verify Customer Identity
             </button>
@@ -299,75 +316,64 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
         </div>
       </div>
 
-      {/* SWARM ROOM VIEW (Salesforce-style Case Swarming) */}
+      {/* Main Content Area */}
       {activeSubTab === 'CASE_SWARM' ? (
-        <div className="flex-1 p-6 space-y-5 overflow-y-auto bg-slate-950/60">
-          <div className="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 flex items-center justify-between">
+        /* Case Swarming View */
+        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+          <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs">
-                <Users className="w-4 h-4 text-indigo-400" />
-                <span>Salesforce-Style Active Case Swarm</span>
+              <div className="flex items-center gap-2 text-purple-900 font-bold text-xs">
+                <Users className="w-4 h-4 text-purple-700" />
+                <span>Salesforce-Style Case Swarm</span>
               </div>
-              <p className="text-xs text-slate-300 mt-1">
-                Cross-functional resolution swarm linked to <strong className="text-white">#swarm-tck-1042-billing</strong> on Slack.
+              <p className="text-xs text-slate-600 mt-1">
+                Cross-functional resolution swarm linked to <strong className="text-slate-900">#swarm-tck-1042-billing</strong>.
               </p>
             </div>
             <button 
               onClick={() => alert("Specialist invited to Swarm!")}
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm"
+              className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Invite Swarmer</span>
             </button>
           </div>
 
-          {/* Active Swarmers */}
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Active Swarm Participants
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {swarmParticipants.map((sp) => (
-                <div key={sp.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-white font-bold text-xs flex items-center justify-center">
-                    {sp.avatar}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>{sp.name}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    </div>
-                    <div className="text-[10px] text-slate-400">{sp.role} • {sp.department}</div>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {swarmParticipants.map((sp) => (
+              <div key={sp.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-purple-100 border border-purple-200 text-purple-800 font-bold text-xs flex items-center justify-center">
+                  {sp.avatar}
                 </div>
-              ))}
-            </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>{sp.name}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  </div>
+                  <div className="text-[11px] text-slate-500">{sp.role} • {sp.department}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Linked Engineering Issues */}
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Linked Engineering Artifacts
-            </h4>
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-slate-200">
-                <GitPullRequest className="w-4 h-4 text-purple-400" />
-                <span>GitHub Issue #882: Fix idempotency token expiration on checkout</span>
-              </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded">
-                Merged to Staging
-              </span>
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-slate-700">
+              <GitPullRequest className="w-4 h-4 text-purple-600" />
+              <span>GitHub PR #882: Fix idempotency token expiration on checkout</span>
             </div>
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-full">
+              Merged to Staging
+            </span>
           </div>
         </div>
       ) : activeSubTab === 'INTERACTION_AUDIT' ? (
-        /* Pega Interaction Record & Contact Notes Audit View */
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-950/60">
+        /* Pega Interaction Records View */
+        <div className="flex-1 overflow-y-auto p-6">
           <InteractionRecordView ticketId={ticket.id} customerName={ticket.customerName || 'Customer'} />
         </div>
       ) : (
-        /* Message Thread Stream */
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+        /* Conversation Message Stream */
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {messages.map((msg) => {
             const isCustomer = msg.senderType === 'CUSTOMER';
             const isNote = msg.isInternalNote;
@@ -377,18 +383,18 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               return (
                 <div 
                   key={msg.id} 
-                  className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-200 shadow-sm"
+                  className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-1 text-[11px] font-bold text-amber-400">
+                  <div className="flex items-center justify-between mb-1.5 text-[11px] font-bold text-amber-800">
                     <div className="flex items-center gap-1.5">
-                      <Lock className="w-3 h-3" />
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
                       <span>INTERNAL NOTE — {msg.senderName}</span>
                     </div>
-                    <span className="text-[10px] text-amber-500/80 font-mono">
+                    <span className="text-[10px] text-amber-600 font-mono">
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <div className="text-amber-100 whitespace-pre-wrap leading-relaxed">
+                  <div className="text-amber-950 whitespace-pre-wrap leading-relaxed">
                     {msg.content}
                   </div>
                 </div>
@@ -401,21 +407,21 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
                 className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
               >
                 <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1 px-1">
-                  <span className="font-semibold text-slate-300">{msg.senderName}</span>
+                  <span className="font-semibold text-slate-600">{msg.senderName}</span>
                   <span>•</span>
                   <span className="font-mono">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  {msg.channel && <span className="text-slate-500">via {msg.channel}</span>}
+                  {msg.channel && <span className="text-slate-400">via {msg.channel}</span>}
                 </div>
 
                 <div
-                  className={`max-w-xl rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-wrap ${
+                  className={`max-w-xl rounded-2xl px-4 py-3 text-xs leading-relaxed shadow-sm whitespace-pre-wrap ${
                     isCustomer
-                      ? 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tl-sm'
+                      ? 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
                       : isAi
-                      ? 'bg-purple-900/30 border border-purple-500/30 text-purple-100 rounded-tr-sm'
-                      : 'bg-blue-600 text-white rounded-tr-sm'
+                      ? 'bg-purple-50 border border-purple-200 text-purple-900 rounded-tr-sm'
+                      : 'bg-purple-600 text-white rounded-tr-sm'
                   }`}
                 >
                   {msg.content}
@@ -427,16 +433,16 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
       )}
 
       {/* Composer Section */}
-      <div className="p-3 border-t border-slate-800 bg-slate-900/60 backdrop-blur space-y-2">
+      <div className="p-4 border-t border-slate-200 bg-white space-y-2.5">
         {/* Quick Suggestion & Macros Bar */}
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 text-[11px]">
           <div className="flex items-center gap-1.5">
             {suggestedReply && (
               <button
                 onClick={handleInsertAiSuggestion}
-                className="flex items-center gap-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-md font-semibold transition-all"
+                className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1 rounded-xl font-bold transition-all shadow-2xs"
               >
-                <Sparkles className="w-3 h-3 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                 <span>Insert AI Suggestion</span>
               </button>
             )}
@@ -444,44 +450,44 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
             {/* Macros */}
             <button
               onClick={() => applyMacro("I have verified the duplicate charge on invoice #INV-9821 and executed a full refund of $350.00 back to your original payment method under Policy #REF-202.")}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-md transition-colors"
+              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-xl transition-colors font-medium"
             >
               Macro: Duplicate Refund
             </button>
             <button
               onClick={() => applyMacro("We checked tracking details with the carrier. The package departed the sorting facility and will be delivered tomorrow afternoon.")}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded-md transition-colors"
+              className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-xl transition-colors font-medium"
             >
               Macro: Shipping Update
             </button>
           </div>
 
           {/* Tone Selector */}
-          <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-md">
-            <Wand2 className="w-3 h-3 text-slate-400" />
-            <span className="text-slate-400 text-[10px]">Tone:</span>
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
+            <Wand2 className="w-3 h-3 text-purple-600" />
+            <span className="text-slate-400 text-[10px] font-semibold">Tone:</span>
             <select
               value={selectedTone}
               onChange={(e) => handleToneChange(e.target.value)}
               disabled={isRewriting}
-              className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer text-[10px]"
+              className="bg-transparent text-slate-800 font-bold focus:outline-none cursor-pointer text-[10px]"
             >
-              <option value="PROFESSIONAL" className="bg-slate-900 text-white">Professional</option>
-              <option value="FRIENDLY" className="bg-slate-900 text-white">Friendly 😊</option>
-              <option value="CONCISE" className="bg-slate-900 text-white">Concise</option>
-              <option value="APOLOGETIC" className="bg-slate-900 text-white">Apologetic</option>
-              <option value="TECHNICAL" className="bg-slate-900 text-white">Technical</option>
+              <option value="PROFESSIONAL">Professional</option>
+              <option value="FRIENDLY">Friendly 😊</option>
+              <option value="CONCISE">Concise</option>
+              <option value="APOLOGETIC">Apologetic</option>
+              <option value="TECHNICAL">Technical</option>
             </select>
           </div>
         </div>
 
         {/* Textarea */}
-        <div className={`relative rounded-xl border transition-all ${
+        <div className={`relative rounded-2xl border transition-all ${
           isCoachingWhisper
-            ? 'bg-amber-950/30 border-amber-400 focus-within:border-amber-400'
+            ? 'bg-indigo-50/70 border-indigo-300 focus-within:border-indigo-500'
             : isInternalNote 
-            ? 'bg-amber-950/20 border-amber-500/40 focus-within:border-amber-500' 
-            : 'bg-slate-950/90 border-slate-800 focus-within:border-blue-500/70'
+            ? 'bg-amber-50/70 border-amber-300 focus-within:border-amber-500' 
+            : 'bg-slate-50 border-slate-200 focus-within:border-purple-500 focus-within:bg-white'
         }`}>
           <textarea
             rows={3}
@@ -495,11 +501,11 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none resize-none leading-relaxed"
+            className="w-full bg-transparent px-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none resize-none leading-relaxed"
           />
 
           {/* Footer controls inside input box */}
-          <div className="px-3 py-2 border-t border-slate-800/40 flex items-center justify-between">
+          <div className="px-4 py-2.5 border-t border-slate-200/80 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Note Toggle */}
               <button
@@ -508,10 +514,10 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
                   setIsInternalNote(!isInternalNote);
                   if (isCoachingWhisper) setIsCoachingWhisper(false);
                 }}
-                className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded transition-all ${
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                   isInternalNote 
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    ? 'bg-amber-200/80 text-amber-900 border border-amber-300' 
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                 }`}
               >
                 <Lock className="w-3 h-3" />
@@ -525,17 +531,18 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
                   setIsCoachingWhisper(!isCoachingWhisper);
                   if (!isCoachingWhisper) setIsInternalNote(true);
                 }}
-                className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded transition-all ${
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                   isCoachingWhisper 
-                    ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    ? 'bg-indigo-200/80 text-indigo-900 border border-indigo-300' 
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                 }`}
               >
-                <span>💡 Supervisor Whisper</span>
+                <Lightbulb className="w-3 h-3 text-amber-500" />
+                <span>Supervisor Whisper</span>
               </button>
 
-              <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
-                Press ⌘+Enter to send
+              <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                ⌘+Enter to send
               </span>
             </div>
 
@@ -543,10 +550,10 @@ export const LiveSupportFlow: React.FC<LiveSupportFlowProps> = ({
               type="button"
               onClick={handleSend}
               disabled={!inputText.trim()}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-lg shadow-sm transition-all ${
+              className={`flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-xl shadow-sm transition-all ${
                 isInternalNote
-                  ? 'bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/30'
               } disabled:opacity-40 disabled:cursor-not-allowed active:scale-95`}
             >
               <Send className="w-3.5 h-3.5" />

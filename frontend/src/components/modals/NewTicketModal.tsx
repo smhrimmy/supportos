@@ -44,26 +44,26 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-white border border-slate-200/90 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <div className="w-7 h-7 rounded-lg bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700">
               <Sparkles className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-white">Create New Omnichannel Ticket</h3>
+            <h3 className="text-sm font-bold text-slate-900">Create New Omnichannel Ticket</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-3.5 text-xs">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           <div>
-            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">
               Ticket Subject / Issue Title *
             </label>
             <input
@@ -72,19 +72,19 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
               placeholder="e.g. Charged twice for invoice #INV-9821"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white transition-colors"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                 Inbound Channel
               </label>
               <select
                 value={channel}
                 onChange={(e) => setChannel(e.target.value as Channel)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500 focus:bg-white"
               >
                 <option value="WHATSAPP">WhatsApp</option>
                 <option value="EMAIL">Email</option>
@@ -96,13 +96,13 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                 Priority Tier
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500 focus:bg-white"
               >
                 <option value="LOW">Low (24h SLA)</option>
                 <option value="MEDIUM">Medium (8h SLA)</option>
@@ -114,31 +114,31 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                 Customer Name
               </label>
               <input
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500 focus:bg-white"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                 Customer Email
               </label>
               <input
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-purple-500 focus:bg-white"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">
               Issue Description & Customer Message
             </label>
             <textarea
@@ -146,27 +146,27 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
               placeholder="Describe the issue reported by the customer..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none leading-relaxed"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white resize-none leading-relaxed"
             />
           </div>
 
           {/* AI Auto-Triage Notice */}
-          <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-400 shrink-0" />
+          <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-[11px] text-purple-900 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
             <span>SupportOS AI Engine will auto-classify category, calculate urgency score, and generate Copilot suggestions upon creation.</span>
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-800">
+          <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-1.5 rounded-lg shadow-sm transition-all"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-1.5 rounded-xl shadow-sm transition-all"
             >
               Create Ticket
             </button>

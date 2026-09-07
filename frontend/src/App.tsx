@@ -157,7 +157,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#FAF9FD] text-slate-900 flex flex-col font-sans selection:bg-purple-600 selection:text-white">
       {/* Top Global Command Bar */}
       <Header
         currentTenant={currentTenant}
@@ -231,20 +231,20 @@ export function App() {
         {activeView === 'wfm' && <WorkforceView />}
         {activeView === 'integrations' && <IntegrationsHubView />}
         {activeView === 'diagnostics' && (
-          <div className="flex-1 p-8 overflow-y-auto bg-slate-950">
+          <div className="flex-1 p-8 overflow-y-auto bg-[#FAF9FD]">
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     Pega Guided Product Diagnostics & Fixing Studio
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Case Lifecycle Management (CLM) for hardware, software, and edge device troubleshooting.
                   </p>
                 </div>
                 <button
                   onClick={() => setActiveView('workspace')}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                  className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm text-xs font-bold transition-colors"
                 >
                   ← Back to Workspace
                 </button>
@@ -263,20 +263,20 @@ export function App() {
           </div>
         )}
         {activeView === 'interactions' && (
-          <div className="flex-1 p-8 overflow-y-auto bg-slate-950">
+          <div className="flex-1 p-8 overflow-y-auto bg-[#FAF9FD]">
             <div className="max-w-5xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     Pega Interaction Records & Contact Notes Hub
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Complete audio/chat recording playback, synchronized transcripts, supervisor coaching whispers, and compliance audit trail.
                   </p>
                 </div>
                 <button
                   onClick={() => setActiveView('workspace')}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                  className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm text-xs font-bold transition-colors"
                 >
                   ← Back to Workspace
                 </button>

@@ -4,37 +4,37 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased font-sans;
+    @apply bg-[#FAF9FD] text-slate-900 antialiased font-sans selection:bg-purple-100 selection:text-purple-900;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 }
 
-/* Custom sleek scrollbar */
+/* Minimal Pega clean scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
+  background: rgba(203, 213, 225, 0.8);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
+  background: rgba(168, 85, 247, 0.5);
 }
 
-/* Pulsing AI Aura */
-@keyframes aiGlow {
+/* Soft Pega Lavender Glow */
+@keyframes pegaGlow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.12);
   }
   50% {
-    box-shadow: 0 0 25px rgba(147, 51, 234, 0.5);
+    box-shadow: 0 8px 30px -4px rgba(147, 51, 234, 0.22);
   }
 }
 
-.ai-pulse-card {
-  animation: aiGlow 4s ease-in-out infinite;
+.pega-card-glow {
+  animation: pegaGlow 4s ease-in-out infinite;
 }
